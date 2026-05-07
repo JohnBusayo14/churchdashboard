@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GOFAMINT — Church Leader Dashboard</title>
+
+<!-- Inter (UI) + JetBrains Mono (code) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet">
+
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+   * Theme tokens. Both modes share the same semantic names; only the values
+   * differ. Toggle via [data-theme="dark|light"] on the <html> element.
+   * Primary brand: blue. Greens / ambers / reds remain reserved for performance
+   * signals (positive trend, warnings, errors) — they carry meaning, not brand.
+   * ───────────────────────────────────────────────────────────────────────── */
+  :root[data-theme="dark"] {
+    --bg:           #0B1020;
+    --surface:      #131A2E;
+    --surface-el:   #1B2540;
+    --border:       #232E4D;
+    --text:         #F8FAFC;
+    --text-sec:     #94A3B8;
+    --text-muted:   #64748B;
+    --primary:      #3B82F6;
+    --primary-deep: #1D4ED8;
+    --primary-soft: rgba(59,130,246,0.16);
+    --on-primary:   #FFFFFF;
+    --green:        #10B981;
+    --amber:        #F59E0B;
+    --red:          #EF4444;
+    --purple:       #8B5CF6;
+    --shadow:       0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25);
+    --row-hover:    rgba(255,255,255,0.03);
+  }
+  :root[data-theme="light"] {
+    --bg:           #F8FAFC;
+    --surface:      #FFFFFF;
+    --surface-el:   #F1F5F9;
+    --border:       #E2E8F0;
+    --text:         #0F172A;
+    --text-sec:     #475569;
+    --text-muted:   #64748B;
+    --primary:      #2563EB;
+    --primary-deep: #1D4ED8;
+    --primary-soft: rgba(37,99,235,0.10);
+    --on-primary:   #FFFFFF;
+    --green:        #059669;
+    --amber:        #D97706;
+    --red:          #DC2626;
+    --purple:       #7C3AED;
+    --shadow:       0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.06);
+    --row-hover:    rgba(15,23,42,0.025);
+  }
+
+  *           { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body  {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "cv11" 1, "ss01" 1, "cv02" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { transition: background-color .2s ease, color .2s ease; }
+  a    { color: var(--primary); text-decoration: none; font-weight: 600; }
+  code { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+  /* Tabular numerals everywhere a number lives — keeps columns aligned. */
+  .stat-value, .hbar-value, table td, .hero-title { font-variant-numeric: tabular-nums; }
+
+  /* ── Layout: sidebar + main ────────────────────────────────────────────── */
+  .layout       { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+  .sidebar      {
+    position: sticky; top: 0;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 22px 16px;
+    z-index: 30;
+  }
+  .main         { padding: 28px 36px 80px; min-width: 0; }
+
+  /* Sidebar brand */
+  .sb-brand     { display: flex; align-items: center; gap: 12px; padding: 4px 10px 22px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+  .sb-logo      { width: 40px; height: 40px; border-radius: 11px; background: var(--primary); color: var(--on-primary); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: var(--shadow); }
+  .sb-name      { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; color: var(--text); }
+  .sb-sub       { font-size: 10px; color: var(--text-muted); margin-top: 2px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 700; }
+
+  /* Sidebar nav */
+  .sb-nav       { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .sb-nav-label { font-size: 10px; font-weight: 800; color: var(--text-muted); letter-spacing: 1.4px; padding: 8px 12px 10px; }
+  .sb-link      {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px;
+    color: var(--text-sec); font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: background .15s ease, color .15s ease;
+    border-left: 3px solid transparent;
+  }
+  .sb-link:hover         { background: var(--surface-el); color: var(--text); }
+  .sb-link.active        { background: var(--primary-soft); color: var(--primary); border-left-color: var(--primary); }
+  .sb-link-icon          { width: 22px; text-align: center; font-size: 16px; }
+
+  /* Sidebar footer (theme + sign out) */
+  .sb-foot      { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .theme-toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--surface-el); border: 1px solid var(--border); cursor: pointer; color: var(--text); font-weight: 600; font-size: 13px; transition: background .15s ease; }
+  .theme-toggle:hover  { background: var(--border); }
+  .theme-toggle .pill  { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: var(--bg); font-size: 14px; }
+
+  /* Main top bar — sticky so the page title and refresh stay reachable while
+     scrolling through long tables.                                          */
+  .topbar       {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 0; margin: -28px -36px 0; padding-left: 36px; padding-right: 36px;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-page-title { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; color: var(--text); }
+  .menu-btn     { display: none; background: var(--surface); border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 10px; font-size: 18px; cursor: pointer; }
+  .topbar-tools { display: flex; align-items: center; gap: 10px; }
+
+  /* Controls (window select + refresh) — sit below the sticky topbar. */
+  .controls     { display: flex; align-items: center; gap: 10px; margin: 22px 0 24px; flex-wrap: wrap; }
+  .controls-label { font-size: 10px; font-weight: 800; color: var(--text-muted); letter-spacing: 1.4px; }
+  select, button { font: inherit; cursor: pointer; }
+  select        { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; transition: border-color .15s ease; }
+  select:hover  { border-color: var(--primary); }
+  .btn          { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 700; transition: background .15s ease, border-color .15s ease; }
+  .btn:hover    { background: var(--surface-el); border-color: var(--primary); }
+  .btn-primary  { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+  .btn-primary:hover { background: var(--primary-deep); border-color: var(--primary-deep); }
+  .btn-ghost    { background: transparent; }
+
+  /* Pages — only the active one is rendered, others stay in the DOM but hidden.
+     Each click on a sidebar link toggles which one is .active.            */
+  .page          { display: none; animation: pageIn .25s ease both; }
+  .page.active   { display: block; }
+  @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-head  { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .section-title { font-size: 26px; font-weight: 900; letter-spacing: -0.7px; line-height: 1.15; }
+  .section-note  { font-size: 13px; color: var(--text-muted); max-width: 540px; line-height: 1.55; margin-top: 6px; }
+  .card          { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); }
+  .card + .card  { margin-top: 14px; }
+
+  /* Stat tiles */
+  .stats         { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 18px; }
+  .stat          { background: var(--surface-el); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat-label    { font-size: 10px; font-weight: 800; color: var(--text-muted); letter-spacing: 1.4px; text-transform: uppercase; }
+  .stat-value    { font-size: 30px; font-weight: 900; letter-spacing: -1px; margin-top: 6px; line-height: 1.1; }
+  .stat-value.primary { color: var(--primary); }
+  .stat-value.green   { color: var(--green); }
+  .stat-value.amber   { color: var(--amber); }
+  .stat-value.purple  { color: var(--purple); }
+  .stat-foot     { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Charts */
+  .chart-wrap    { background: var(--surface-el); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .chart-label   { font-size: 10px; font-weight: 800; color: var(--text-muted); letter-spacing: 1.4px; margin-bottom: 10px; text-transform: uppercase; }
+  .chart-grid    { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .axis          { fill: currentColor; opacity: 0.55; font-size: 3.5px; font-family: 'Inter', sans-serif; }
+
+  /* Tables */
+  .table-wrap    { background: var(--surface-el); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  table          { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th       { text-align: left; padding: 12px 14px; background: var(--surface); color: var(--text-muted); font-size: 10px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  tbody td       { padding: 13px 14px; border-bottom: 1px solid var(--border); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--row-hover); }
+
+  .pill          { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.2px; }
+  .pill-primary  { background: var(--primary-soft); color: var(--primary); }
+  .pill-green    { background: rgba(16,185,129,0.15); color: var(--green); }
+  .pill-amber    { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .pill-purple   { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .pill-muted    { background: var(--surface);        color: var(--text-muted); }
+
+  .empty         { padding: 40px; text-align: center; color: var(--text-muted); }
+  .empty-icon    { font-size: 40px; margin-bottom: 8px; }
+
+  /* Horizontal bar chart inside category breakdowns */
+  .hbar          { display: grid; grid-template-columns: 140px 1fr 70px; align-items: center; gap: 12px; padding: 7px 0; }
+  .hbar-label    { font-size: 13px; font-weight: 600; text-transform: capitalize; }
+  .hbar-track    { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+  .hbar-fill     { height: 100%; transition: width .4s ease; }
+  .hbar-value    { font-size: 13px; font-weight: 800; text-align: right; }
+
+  .err           { color: var(--red); font-size: 12px; padding: 8px 0; font-weight: 600; }
+  .footer        { text-align: center; padding: 26px 0 0; color: var(--text-muted); font-size: 11.5px; border-top: 1px solid var(--border); margin-top: 40px; line-height: 1.7; }
+
+  /* Mobile drawer */
+  .backdrop      { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 25; opacity: 0; transition: opacity .2s ease; pointer-events: none; }
+  .backdrop.open { display: block; opacity: 1; pointer-events: auto; }
+
+  /* ── Auth gate (sign-in / sign-up) ─────────────────────────────────────── */
+  .auth-gate    { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: none; align-items: center; justify-content: center; padding: 24px; overflow-y: auto; }
+  .auth-gate.show { display: flex; }
+  .auth-card    { width: 100%; max-width: 460px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px 28px; box-shadow: var(--shadow); }
+  .auth-brand   { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .auth-brand .sb-logo { width: 44px; height: 44px; font-size: 22px; }
+  .auth-title   { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.2; }
+  .auth-sub     { font-size: 13px; color: var(--text-sec); margin-top: 4px; line-height: 1.5; }
+  .auth-tabs    { display: flex; background: var(--surface-el); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin: 22px 0 18px; }
+  .auth-tab     { flex: 1; background: transparent; border: 0; padding: 9px; font-weight: 700; color: var(--text-sec); border-radius: 8px; cursor: pointer; transition: background .15s ease, color .15s ease; }
+  .auth-tab.active { background: var(--primary); color: var(--on-primary); }
+  .auth-field   { margin-bottom: 14px; }
+  .auth-label   { display: block; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .auth-input   { width: 100%; background: var(--surface-el); color: var(--text); border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 14px; font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease; outline: none; }
+  .auth-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+  .auth-row     { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .auth-msg     { padding: 11px 13px; border-radius: 10px; font-size: 12.5px; line-height: 1.5; margin-bottom: 14px; font-weight: 600; }
+  .auth-msg.err { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .auth-msg.ok  { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+  .auth-msg.info{ background: var(--primary-soft); color: var(--primary); border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); }
+  .auth-submit  { width: 100%; background: var(--primary); color: var(--on-primary); border: 0; border-radius: 10px; padding: 12px; font-weight: 800; font-size: 14px; cursor: pointer; transition: background .15s ease; margin-top: 4px; }
+  .auth-submit:hover    { background: var(--primary-deep); }
+  .auth-submit:disabled { opacity: 0.6; cursor: wait; }
+  .auth-foot    { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+  .auth-foot a, .auth-foot button.linklike { color: var(--primary); font-weight: 700; cursor: pointer; background: none; border: 0; padding: 0; font-family: inherit; font-size: inherit; }
+
+  @media (max-width: 900px) {
+    .layout      { grid-template-columns: 1fr; }
+    .sidebar     {
+      position: fixed; left: 0; top: 0;
+      width: 270px; height: 100vh;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+      box-shadow: var(--shadow);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .main        { padding: 20px 18px 60px; }
+    .topbar      { margin: -20px -18px 0; padding-left: 18px; padding-right: 18px; }
+    .menu-btn    { display: inline-flex; align-items: center; justify-content: center; }
+    .stat-value  { font-size: 24px; }
+    .section-title { font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     AUTH GATE — covers the whole screen until the church admin signs in.
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="auth-gate" id="auth-gate" role="dialog" aria-label="Sign in or sign up">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="sb-logo">⛪</div>
+      <div>
+        <div class="auth-title">GOFAMINT Sunday School</div>
+        <div class="auth-sub">Church Leader Dashboard</div>
+      </div>
+    </div>
+
+    <div class="auth-tabs" role="tablist">
+      <button class="auth-tab active" id="tab-signin" role="tab" onclick="showAuthTab('signin')">Sign in</button>
+      <button class="auth-tab"        id="tab-signup" role="tab" onclick="showAuthTab('signup')">Sign up</button>
+    </div>
+
+    <div id="auth-msg-host"></div>
+
+    <!-- Backend URL — first-run only; remembered after that. Hidden by default. -->
+    <div class="auth-field" id="auth-api-field" style="display:none">
+      <label class="auth-label" for="auth-api">Backend URL</label>
+      <input class="auth-input" id="auth-api" type="text" placeholder="https://gospelarapp-production.up.railway.app" />
+    </div>
+
+    <!-- ── Sign-in form ──────────────────────────────────────────────────── -->
+    <form id="form-signin" onsubmit="event.preventDefault(); doSignIn();">
+      <div class="auth-field">
+        <label class="auth-label" for="si-email">Email</label>
+        <input class="auth-input" id="si-email" type="email" autocomplete="email" required />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="si-pass">Password</label>
+        <input class="auth-input" id="si-pass" type="password" autocomplete="current-password" required minlength="6" />
+      </div>
+      <button class="auth-submit" id="si-btn" type="submit">Sign in →</button>
+      <div class="auth-foot">
+        <span>Don't have an account?</span>
+        <button type="button" class="linklike" onclick="showAuthTab('signup')">Apply for access</button>
+      </div>
+    </form>
+
+    <!-- ── Sign-up form ──────────────────────────────────────────────────── -->
+    <form id="form-signup" style="display:none" onsubmit="event.preventDefault(); doSignUp();">
+      <div class="auth-field">
+        <label class="auth-label" for="su-church">Church name</label>
+        <input class="auth-input" id="su-church" type="text" required placeholder="GOFAMINT, Surulere" />
+      </div>
+      <div class="auth-row">
+        <div class="auth-field">
+          <label class="auth-label" for="su-contact">Contact name</label>
+          <input class="auth-input" id="su-contact" type="text" placeholder="Pastor / leader" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="su-phone">Phone</label>
+          <input class="auth-input" id="su-phone" type="tel" placeholder="+234…" />
+        </div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="su-location">Location</label>
+        <input class="auth-input" id="su-location" type="text" placeholder="City, State" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="su-email">Admin email</label>
+        <input class="auth-input" id="su-email" type="email" autocomplete="email" required />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="su-pass">Password (min. 6 chars)</label>
+        <input class="auth-input" id="su-pass" type="password" autocomplete="new-password" required minlength="6" />
+      </div>
+      <button class="auth-submit" id="su-btn" type="submit">Submit application →</button>
+      <div class="auth-foot">
+        <span>Already approved?</span>
+        <button type="button" class="linklike" onclick="showAuthTab('signin')">Sign in</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Mobile drawer backdrop -->
+<div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
+
+<div class="layout">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SIDEBAR
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">⛪</div>
+      <div>
+        <div class="sb-name">GOFAMINT</div>
+        <div class="sb-sub">Church Leader</div>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-nav-label">Insights</div>
+      <a class="sb-link active" data-nav="attendance" href="#attendance"><span class="sb-link-icon">📅</span> Attendance</a>
+      <a class="sb-link"        data-nav="engagement" href="#engagement"><span class="sb-link-icon">📈</span> Engagement</a>
+      <a class="sb-link"        data-nav="lessons"    href="#lessons"><span class="sb-link-icon">📚</span> Lessons</a>
+      <a class="sb-link"        data-nav="teachers"   href="#teachers"><span class="sb-link-icon">👨‍🏫</span> Teachers</a>
+    </nav>
+
+    <div class="sb-foot">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <span><span id="theme-icon">🌙</span> &nbsp;<span id="theme-label">Dark mode</span></span>
+        <span class="pill" id="theme-pill">DARK</span>
+      </button>
+      <button class="btn btn-ghost" onclick="exportAll()">⇩ Export CSV</button>
+      <button class="btn btn-ghost" onclick="logout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       MAIN
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <main class="main">
+
+    <div class="topbar">
+      <button class="menu-btn" onclick="toggleMenu()" aria-label="Open menu">☰</button>
+      <div style="flex:1">
+        <div class="topbar-page-title" id="page-title">📅 Attendance Trends</div>
+      </div>
+      <div class="topbar-tools">
+        <span class="controls-label" id="last-loaded">—</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <span class="controls-label">WINDOW</span>
+      <select id="window-select" onchange="reloadCurrent()">
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90" selected>Last 90 days</option>
+        <option value="180">Last 6 months</option>
+        <option value="365">Last 12 months</option>
+        <option value="730">Last 24 months</option>
+      </select>
+      <button class="btn btn-primary" onclick="reloadCurrent()">↻ Refresh</button>
+    </div>
+
+    <!-- ATTENDANCE ───────────────────────────────────────────────────────── -->
+    <section id="attendance" class="page active" data-title="📅 Attendance Trends">
+      <div class="section-head">
+        <div>
+          <div class="section-title">📅 Attendance Trends</div>
+          <div class="section-note">Each marker awarded by a teacher counts as one student-lesson attendance. Use the per-class table to spot dormant or declining classes.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="stats" id="att-stats"></div>
+        <div class="chart-wrap" style="margin-bottom:16px">
+          <div class="chart-label">Daily attendance over window</div>
+          <div id="att-chart"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Class</th><th>Category</th><th>Invite</th>
+              <th>Lessons w/ Attendance</th><th>Total Attendance</th><th>Avg per Lesson</th>
+            </tr></thead>
+            <tbody id="att-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENGAGEMENT ───────────────────────────────────────────────────────── -->
+    <section id="engagement" class="page" data-title="📈 Engagement Stats">
+      <div class="section-head">
+        <div>
+          <div class="section-title">📈 Engagement Stats</div>
+          <div class="section-note">Who's using the app, how often, and where the growth is coming from. "Active learners" = people who completed a quiz inside the window.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="stats" id="eng-stats"></div>
+        <div class="chart-grid">
+          <div class="chart-wrap">
+            <div class="chart-label">Daily quiz completions</div>
+            <div id="eng-completions"></div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-label">Daily subscription signups</div>
+            <div id="eng-signups"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-label" style="margin-bottom:14px">Active subscribers by age group</div>
+        <div id="eng-cats"></div>
+      </div>
+
+      <div class="card">
+        <div class="chart-label" style="margin-bottom:14px">Top 20 learners this window</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Rank</th><th>Learner</th><th>Church</th>
+              <th>Lessons Completed</th><th>Total Score</th><th>Last Active</th>
+            </tr></thead>
+            <tbody id="eng-top-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- LESSONS ──────────────────────────────────────────────────────────── -->
+    <section id="lessons" class="page" data-title="📚 Most Completed Lessons">
+      <div class="section-head">
+        <div>
+          <div class="section-title">📚 Most Completed Lessons</div>
+          <div class="section-note">Where attention is concentrating. Use the category breakdown to find under-engaged age groups.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-label" style="margin-bottom:14px">Per-category rollup</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Category</th><th>Total Lessons</th><th>Lessons Attempted</th>
+              <th>Total Completions</th><th>Unique Learners</th><th>Avg Score</th>
+            </tr></thead>
+            <tbody id="lesson-cats-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-label" style="margin-bottom:14px">Top 25 lessons</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Lesson</th><th>Category</th>
+              <th>Completions</th><th>Unique Learners</th><th>Avg Score</th><th>Last Completed</th>
+            </tr></thead>
+            <tbody id="lessons-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEACHERS ─────────────────────────────────────────────────────────── -->
+    <section id="teachers" class="page" data-title="👨‍🏫 Teacher Performance">
+      <div class="section-head">
+        <div>
+          <div class="section-title">👨‍🏫 Teacher Performance</div>
+          <div class="section-note">Per-teacher activity. Teachers with zero recent marks may need follow-up.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-label" style="margin-bottom:14px">Mark-type distribution (window)</div>
+        <div id="mark-dist"></div>
+      </div>
+
+      <div class="card">
+        <div class="chart-label" style="margin-bottom:14px">Per-teacher rollup</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Teacher</th><th>Classes</th><th>Students</th>
+              <th>Marks (Window)</th><th>Points (Window)</th>
+              <th>Marks (All-Time)</th><th>Last Active</th>
+            </tr></thead>
+            <tbody id="teachers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      Read-only · For pastoral and operational planning.<br/>
+      Connected to <code id="api-display"></code>
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Theme — persists choice in localStorage; defaults to system preference.
+ * ─────────────────────────────────────────────────────────────────────────── */
+const THEME_KEY = 'church_admin_theme';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-icon').textContent  = theme === 'dark' ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = theme === 'dark' ? 'Dark mode' : 'Light mode';
+  document.getElementById('theme-pill').textContent  = theme.toUpperCase();
+}
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
+(function bootTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  applyTheme(saved || (prefersLight ? 'light' : 'dark'));
+})();
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Mobile drawer
+ * ─────────────────────────────────────────────────────────────────────────── */
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('backdrop').classList.toggle('open');
+}
+function closeMenu() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Session — token + API URL persisted across reloads in localStorage.
+ *   • Sign-in stores the church's per-tenant admin_token here.
+ *   • Sign-up does NOT log in (the church is pending approval).
+ *   • Every request goes out as x-church-key so the backend scopes data to
+ *     just this church via churchAuth + churchScope.
+ * ─────────────────────────────────────────────────────────────────────────── */
+const KEY_API     = 'church_admin_api';
+const KEY_TOKEN   = 'church_admin_token';
+const KEY_CHURCH  = 'church_admin_church';   // JSON {id, name, admin_email, …}
+
+let API   = (localStorage.getItem(KEY_API)   || 'https://gospelarapp-production.up.railway.app').replace(/\/$/, '');
+let TOKEN = localStorage.getItem(KEY_TOKEN) || '';
+let CHURCH = (() => { try { return JSON.parse(localStorage.getItem(KEY_CHURCH) || 'null'); } catch { return null; } })();
+
+document.getElementById('api-display').textContent = API || '(not set)';
+document.getElementById('auth-api').value          = API;
+
+function logout() {
+  localStorage.removeItem(KEY_TOKEN);
+  localStorage.removeItem(KEY_CHURCH);
+  TOKEN = '';
+  CHURCH = null;
+  showAuthGate();
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Fetch helper — sends x-church-key (the per-church admin_token).
+ * ─────────────────────────────────────────────────────────────────────────── */
+async function req(path) {
+  const r = await fetch(API + path, { headers: { 'x-church-key': TOKEN } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    // Token revoked / church un-approved while session was open → drop user
+    // back to the auth gate with a helpful message.
+    if (r.status === 401 || r.status === 403) {
+      showAuthGate({
+        kind: 'err',
+        text: d.message || d.error || 'Session ended. Please sign in again.',
+      });
+      logout();
+    }
+    throw new Error(d.error || d.message || `HTTP ${r.status}`);
+  }
+  return d;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Auth gate UI — sign in / sign up panel.
+ * ─────────────────────────────────────────────────────────────────────────── */
+function showAuthGate(msg) {
+  document.getElementById('auth-gate').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  // Show backend URL field if it isn't set yet (first run).
+  document.getElementById('auth-api-field').style.display = API ? 'none' : 'block';
+  if (msg) setAuthMsg(msg);
+}
+function hideAuthGate() {
+  document.getElementById('auth-gate').classList.remove('show');
+  document.body.style.overflow = '';
+  setAuthMsg(null);
+}
+function showAuthTab(which) {
+  document.getElementById('tab-signin').classList.toggle('active', which === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', which === 'signup');
+  document.getElementById('form-signin').style.display = which === 'signin' ? '' : 'none';
+  document.getElementById('form-signup').style.display = which === 'signup' ? '' : 'none';
+  setAuthMsg(null);
+}
+function setAuthMsg(msg) {
+  const host = document.getElementById('auth-msg-host');
+  if (!msg) { host.innerHTML = ''; return; }
+  const cls = msg.kind === 'ok' ? 'ok' : msg.kind === 'info' ? 'info' : 'err';
+  host.innerHTML = `<div class="auth-msg ${cls}">${esc(msg.text)}</div>`;
+}
+function readApiFromForm() {
+  // If first-run, pull the API URL from the form; persist it.
+  const v = document.getElementById('auth-api').value.trim().replace(/\/$/, '');
+  if (v) {
+    API = v;
+    localStorage.setItem(KEY_API, API);
+    document.getElementById('api-display').textContent = API;
+  }
+}
+
+async function doSignIn() {
+  readApiFromForm();
+  if (!API) return setAuthMsg({ kind: 'err', text: 'Enter the backend URL first.' });
+  const email    = document.getElementById('si-email').value.trim().toLowerCase();
+  const password = document.getElementById('si-pass').value;
+  if (!email || !password) return setAuthMsg({ kind: 'err', text: 'Email and password are required.' });
+
+  const btn = document.getElementById('si-btn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const r = await fetch(API + '/api/church-admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const text = d.message || d.error || `Sign-in failed (${r.status}).`;
+      setAuthMsg({ kind: 'err', text });
+      return;
+    }
+    TOKEN  = d.admin_token;
+    CHURCH = d.church;
+    localStorage.setItem(KEY_TOKEN,  TOKEN);
+    localStorage.setItem(KEY_CHURCH, JSON.stringify(CHURCH));
+    hideAuthGate();
+    updateChurchBadge();
+    loadPage(currentPage).catch(() => {});
+  } catch (e) {
+    setAuthMsg({ kind: 'err', text: e.message || 'Network error.' });
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in →';
+  }
+}
+
+async function doSignUp() {
+  readApiFromForm();
+  if (!API) return setAuthMsg({ kind: 'err', text: 'Enter the backend URL first.' });
+
+  const body = {
+    church_name:  document.getElementById('su-church').value.trim(),
+    contact_name: document.getElementById('su-contact').value.trim(),
+    phone:        document.getElementById('su-phone').value.trim(),
+    location:     document.getElementById('su-location').value.trim(),
+    admin_email:  document.getElementById('su-email').value.trim().toLowerCase(),
+    password:     document.getElementById('su-pass').value,
+  };
+  if (!body.church_name || !body.admin_email || !body.password)
+    return setAuthMsg({ kind: 'err', text: 'Church name, admin email and password are required.' });
+
+  const btn = document.getElementById('su-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  try {
+    const r = await fetch(API + '/api/church-admin/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      setAuthMsg({ kind: 'err', text: d.message || d.error || 'Signup failed.' });
+      return;
+    }
+    setAuthMsg({
+      kind: 'info',
+      text: 'Application submitted. The main admin will review your church and approve access. You will be able to sign in once approved.',
+    });
+    showAuthTab('signin');
+    document.getElementById('si-email').value = body.admin_email;
+  } catch (e) {
+    setAuthMsg({ kind: 'err', text: e.message || 'Network error.' });
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit application →';
+  }
+}
+
+function updateChurchBadge() {
+  // Replace the page title prefix with the church name when signed in, so the
+  // user has a clear sense of whose data they're looking at.
+  if (CHURCH?.name) {
+    const sub = document.querySelector('.sb-sub');
+    if (sub) sub.textContent = CHURCH.name;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Formatters
+ * ─────────────────────────────────────────────────────────────────────────── */
+const esc      = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt      = (n) => Number(n || 0).toLocaleString('en-NG');
+const fmtRel   = (d) => {
+  if (!d) return '—';
+  const diff = (Date.now() - new Date(d).getTime()) / 86400000;
+  if (diff < 1)   return 'today';
+  if (diff < 2)   return 'yesterday';
+  if (diff < 7)   return `${Math.floor(diff)}d ago`;
+  if (diff < 30)  return `${Math.floor(diff/7)}w ago`;
+  if (diff < 365) return `${Math.floor(diff/30)}mo ago`;
+  return `${Math.floor(diff/365)}y ago`;
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * UI primitives — stat tile + bar charts. All inline SVG, no library deps.
+ * ─────────────────────────────────────────────────────────────────────────── */
+function statTile(label, value, klass = '', foot = '') {
+  return `<div class="stat">
+    <div class="stat-label">${esc(label)}</div>
+    <div class="stat-value ${klass}">${esc(String(value))}</div>
+    ${foot ? `<div class="stat-foot">${esc(foot)}</div>` : ''}
+  </div>`;
+}
+
+function chartBars(rows, key, color = 'var(--primary)', height = 130) {
+  if (!rows || !rows.length) {
+    return `<div class="empty"><div class="empty-icon">📊</div>No data in this window yet.</div>`;
+  }
+  const max = Math.max(...rows.map(r => Number(r[key] || 0)), 1);
+  const W = 100, H = height, gap = 0.6, bw = W / rows.length;
+  const bars = rows.map((r, i) => {
+    const v = Number(r[key] || 0);
+    const h = (v / max) * (H - 20);
+    return `<rect x="${(i*bw + gap/2).toFixed(2)}" y="${(H - h - 16).toFixed(2)}" width="${(bw - gap).toFixed(2)}" height="${h.toFixed(2)}" rx="0.4" fill="${color}"/>`;
+  }).join('');
+  const first = rows[0]?.day        ? new Date(rows[0].day).toLocaleDateString('en-NG',{month:'short',day:'numeric'})        : '';
+  const last  = rows.at(-1)?.day    ? new Date(rows.at(-1).day).toLocaleDateString('en-NG',{month:'short',day:'numeric'})    : '';
+  const total = rows.reduce((s, r) => s + Number(r[key] || 0), 0);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px;display:block;color:var(--text-sec)">
+    ${bars}
+    <text class="axis" x="0"  y="${H-2}">${esc(first)}</text>
+    <text class="axis" x="${W}" y="${H-2}" text-anchor="end">${esc(last)}</text>
+  </svg>
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px">
+    <span>Peak: <strong style="color:var(--text)">${fmt(max)}</strong></span>
+    <span>Window total: <strong style="color:var(--text)">${fmt(total)}</strong></span>
+  </div>`;
+}
+
+function chartHBars(rows, labelKey, valueKey, color = 'var(--primary)') {
+  if (!rows || !rows.length) {
+    return `<div class="empty"><div class="empty-icon">📊</div>No data.</div>`;
+  }
+  const max = Math.max(...rows.map(r => Number(r[valueKey] || 0)), 1);
+  return rows.map(r => {
+    const v   = Number(r[valueKey] || 0);
+    const pct = (v / max) * 100;
+    return `<div class="hbar">
+      <div class="hbar-label">${esc(r[labelKey] || '—')}</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
+      <div class="hbar-value">${fmt(v)}</div>
+    </div>`;
+  }).join('');
+}
+
+const categoryPill = (cat) => {
+  const cls = cat === 'adult'        ? 'pill-purple'
+            : cat === 'youth'        ? 'pill-primary'
+            : cat === 'intermediate' ? 'pill-green'
+                                     : 'pill-amber';
+  return `<span class="pill ${cls}">${esc(cat || '—')}</span>`;
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * SECTION LOADERS
+ * ─────────────────────────────────────────────────────────────────────────── */
+let cache = {};
+
+async function loadAttendance(days) {
+  const tbody = document.getElementById('att-tbody');
+  try {
+    const d = await req(`/api/admin/insights/attendance?days=${days}`);
+    cache.att = d;
+    document.getElementById('att-stats').innerHTML = [
+      statTile('Total Attendance',  fmt(d.summary?.total_attendances), 'green'),
+      statTile('Unique Students',   fmt(d.summary?.unique_students),   'primary'),
+      statTile('Active Classes',    fmt(d.summary?.active_classes),    'amber'),
+      statTile('Window',            `${d.windowDays} days`),
+    ].join('');
+    document.getElementById('att-chart').innerHTML = chartBars(d.daily, 'attended', 'var(--primary)');
+    tbody.innerHTML = d.byClass.length
+      ? d.byClass.map(c => {
+          const avg = c.lessons_with_attendance > 0
+            ? (Number(c.attendance_count) / Number(c.lessons_with_attendance)).toFixed(1)
+            : '—';
+          return `<tr>
+            <td><strong>${esc(c.name)}</strong></td>
+            <td>${categoryPill(c.category)}</td>
+            <td><span class="pill pill-muted">#${esc(c.invite_code || '—')}</span></td>
+            <td>${fmt(c.lessons_with_attendance)}</td>
+            <td><strong>${fmt(c.attendance_count)}</strong></td>
+            <td>${avg}</td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🏫</div>No classes have attendance in this window yet.</div></td></tr>`;
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="err">⚠ ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function loadEngagement(days) {
+  try {
+    const d = await req(`/api/admin/insights/engagement?days=${days}`);
+    cache.eng = d;
+    document.getElementById('eng-stats').innerHTML = [
+      statTile('Total Users',        fmt(d.totals?.total_users),            'primary'),
+      statTile('Active Subscribers', fmt(d.totals?.active_subscribers),     'green'),
+      statTile('Quiz Completions',   fmt(d.totals?.total_quiz_completions), 'amber'),
+      statTile('Active Learners',    fmt(d.totals?.active_learners),        'purple'),
+      statTile('Points Earned',      fmt(d.totals?.total_points_earned)),
+    ].join('');
+    document.getElementById('eng-completions').innerHTML = chartBars(d.completionsDaily, 'completions', 'var(--amber)');
+    document.getElementById('eng-signups').innerHTML     = chartBars(d.signupsDaily,     'signups',     'var(--green)');
+    document.getElementById('eng-cats').innerHTML        = chartHBars(d.subsByCategory,  'category',    'active', 'var(--primary)');
+
+    const tl = await req(`/api/admin/insights/top-learners?days=${days}&limit=20`);
+    cache.top = tl;
+    const tbody = document.getElementById('eng-top-tbody');
+    tbody.innerHTML = tl.learners.length
+      ? tl.learners.map((l, i) => `<tr>
+          <td><strong>#${i+1}</strong></td>
+          <td>${esc(l.avatar_emoji)} <strong>${esc(l.display_name)}</strong>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${esc(l.email)}</div></td>
+          <td style="color:var(--text-sec)">${esc(l.church || '—')}</td>
+          <td>${fmt(l.lessons_completed)}</td>
+          <td><span class="pill pill-amber">⭐ ${fmt(l.total_score)}</span></td>
+          <td style="color:var(--text-muted)">${fmtRel(l.last_active)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div>No active learners in this window.</div></td></tr>`;
+  } catch (e) {
+    document.getElementById('eng-stats').innerHTML = `<div class="err">⚠ ${esc(e.message)}</div>`;
+  }
+}
+
+async function loadLessons() {
+  const catTbody = document.getElementById('lesson-cats-tbody');
+  const lessonsTbody = document.getElementById('lessons-tbody');
+  try {
+    const [cats, top] = await Promise.all([
+      req('/api/admin/insights/lesson-categories'),
+      req('/api/admin/insights/most-completed-lessons?limit=25'),
+    ]);
+    cache.lessonCats = cats;
+    cache.topLessons = top;
+    catTbody.innerHTML = cats.length
+      ? cats.map(c => `<tr>
+          <td>${categoryPill(c.category)}</td>
+          <td>${fmt(c.total_lessons)}</td>
+          <td>${fmt(c.lessons_attempted)}</td>
+          <td><strong>${fmt(c.total_completions)}</strong></td>
+          <td>${fmt(c.unique_learners)}</td>
+          <td>${c.avg_score != null ? Number(c.avg_score).toFixed(1) : '—'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📚</div>No lesson data yet.</div></td></tr>`;
+    lessonsTbody.innerHTML = top.length
+      ? top.map((r, i) => `<tr>
+          <td><strong>${i+1}</strong></td>
+          <td>${esc(r.title || `Lesson ${r.lesson_number}`)}</td>
+          <td>${categoryPill(r.category_id)}</td>
+          <td><strong>${fmt(r.completions)}</strong></td>
+          <td>${fmt(r.unique_learners)}</td>
+          <td>${r.avg_score != null ? Number(r.avg_score).toFixed(1) : '—'}</td>
+          <td style="color:var(--text-muted)">${fmtRel(r.last_completed)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📝</div>No quiz completions recorded yet.</div></td></tr>`;
+  } catch (e) {
+    catTbody.innerHTML     = `<tr><td colspan="6" class="err">⚠ ${esc(e.message)}</td></tr>`;
+    lessonsTbody.innerHTML = `<tr><td colspan="7" class="err">⚠ ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function loadTeachers(days) {
+  const tbody = document.getElementById('teachers-tbody');
+  try {
+    const [marks, perf] = await Promise.all([
+      req(`/api/admin/insights/mark-distribution?days=${days}`),
+      req(`/api/admin/insights/teacher-performance?days=${days}`),
+    ]);
+    cache.markDist = marks;
+    cache.teachers = perf;
+    document.getElementById('mark-dist').innerHTML = marks.breakdown.length
+      ? chartHBars(marks.breakdown, 'mark_type', 'count', 'var(--purple)')
+      : `<div class="empty"><div class="empty-icon">📋</div>No marks awarded in this window.</div>`;
+    tbody.innerHTML = perf.teachers.length
+      ? perf.teachers.map(t => `<tr>
+          <td>${esc(t.avatar_emoji)} <strong>${esc(t.display_name)}</strong>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${esc(t.teacher_email)}</div></td>
+          <td><span class="pill pill-primary">${fmt(t.classes_owned)}</span></td>
+          <td>${fmt(t.students_enrolled)}</td>
+          <td><strong>${fmt(t.marks_awarded_recent)}</strong></td>
+          <td><span class="pill pill-amber">⭐ ${fmt(t.points_awarded_recent)}</span></td>
+          <td style="color:var(--text-muted)">${fmt(t.marks_awarded_total)}</td>
+          <td style="color:var(--text-muted)">${fmtRel(t.last_active)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="7"><div class="empty"><div class="empty-icon">👨‍🏫</div>No teacher activity yet.</div></td></tr>`;
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="err">⚠ ${esc(e.message)}</td></tr>`;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Hash router — each section is a separate page, swapped by location.hash.
+ *   • Click a sidebar link  → location.hash changes  → showPage() runs
+ *   • Browser back/forward  → hashchange event      → showPage() runs
+ *   • Each page lazy-loads its data on first visit; subsequent visits use the
+ *     existing rendered DOM until the user hits Refresh or changes the window.
+ * ─────────────────────────────────────────────────────────────────────────── */
+const PAGES   = ['attendance', 'engagement', 'lessons', 'teachers'];
+const loaded  = new Set();      // pages whose data has been fetched at least once
+let   currentPage = 'attendance';
+
+// Per-page loader registry. Keep the existing functions and just dispatch.
+async function loadPage(id) {
+  if (!API || !TOKEN) {
+    // Not signed in yet — auth gate will handle it. Skip silently.
+    return;
+  }
+  const days  = parseInt(document.getElementById('window-select').value, 10) || 90;
+  const start = Date.now();
+  if (id === 'attendance')      await loadAttendance(days);
+  else if (id === 'engagement') await loadEngagement(days);
+  else if (id === 'lessons')    await loadLessons();
+  else if (id === 'teachers')   await loadTeachers(days);
+  loaded.add(id);
+  document.getElementById('last-loaded').textContent =
+    `Updated ${new Date().toLocaleTimeString('en-NG')} · ${(Date.now()-start)}ms`;
+}
+
+function showPage(id, opts = {}) {
+  if (!PAGES.includes(id)) id = PAGES[0];
+  currentPage = id;
+  // Toggle visibility
+  document.querySelectorAll('.page').forEach((el) => {
+    el.classList.toggle('active', el.id === id);
+  });
+  // Update sidebar
+  document.querySelectorAll('.sb-link').forEach((b) => {
+    b.classList.toggle('active', b.dataset.nav === id);
+  });
+  // Update topbar title from the section's data-title
+  const sec = document.getElementById(id);
+  document.getElementById('page-title').textContent =
+    sec?.dataset.title || id.charAt(0).toUpperCase() + id.slice(1);
+  // Scroll back to top so users see the section header, not the bottom of
+  // the previous page they were reading.
+  window.scrollTo({ top: 0, behavior: opts.smoothScroll === false ? 'auto' : 'smooth' });
+  closeMenu();
+  // Lazy-load on first visit
+  if (!loaded.has(id)) loadPage(id).catch((e) => console.warn('loadPage', id, e));
+}
+
+// Sidebar links use href="#id"; the browser updates the hash and fires
+// hashchange; the router below reacts and swaps pages.
+window.addEventListener('hashchange', () => {
+  const id = location.hash.replace('#', '') || PAGES[0];
+  showPage(id);
+});
+
+// Refresh button + window-selector handler — re-runs the current page's loader.
+function reloadCurrent() {
+  loadPage(currentPage);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * CSV export
+ * ─────────────────────────────────────────────────────────────────────────── */
+function csvEscape(v) {
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function csvSection(title, headers, rows) {
+  if (!rows || !rows.length) return `\n## ${title}\n(no data)\n`;
+  return `\n## ${title}\n${headers.join(',')}\n${
+    rows.map(r => headers.map(h => csvEscape(r[h])).join(',')).join('\n')
+  }\n`;
+}
+function exportAll() {
+  let csv = '# GOFAMINT Sunday School — Church Insights Export\n';
+  csv += `# Generated: ${new Date().toISOString()}\n`;
+  csv += `# Window: ${document.getElementById('window-select').value} days\n`;
+  if (cache.att) {
+    csv += csvSection('Attendance Summary', ['total_attendances','unique_students','active_classes'], [cache.att.summary]);
+    csv += csvSection('Attendance by Class', ['name','category','invite_code','lessons_with_attendance','attendance_count'], cache.att.byClass);
+  }
+  if (cache.eng)        csv += csvSection('Engagement Totals',         Object.keys(cache.eng.totals||{}), [cache.eng.totals]);
+  if (cache.eng)        csv += csvSection('Subscribers by Category',   ['category','active','total'],     cache.eng.subsByCategory);
+  if (cache.top)        csv += csvSection('Top Learners',              ['display_name','email','church','lessons_completed','total_score','last_active'], cache.top.learners);
+  if (cache.lessonCats) csv += csvSection('Lesson Categories',         ['category','total_lessons','lessons_attempted','total_completions','unique_learners','avg_score'], cache.lessonCats);
+  if (cache.topLessons) csv += csvSection('Most Completed Lessons',    ['lesson_number','title','category_id','completions','unique_learners','avg_score','last_completed'], cache.topLessons);
+  if (cache.teachers)   csv += csvSection('Teacher Performance',       ['display_name','teacher_email','classes_owned','students_enrolled','marks_awarded_recent','points_awarded_recent','marks_awarded_total','last_active'], cache.teachers.teachers);
+  if (cache.markDist)   csv += csvSection('Mark Distribution',         ['mark_type','count','total_points'], cache.markDist.breakdown);
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `gofamint-insights-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Boot — show the auth gate if we don't have a token yet; otherwise route
+// to the requested page (defaulting to attendance).
+(function boot() {
+  const initial = location.hash.replace('#', '') || PAGES[0];
+  if (!location.hash) history.replaceState(null, '', '#' + initial);
+  if (!TOKEN) {
+    showAuthGate();
+    // Mark sidebar/page state but don't fetch anything until login.
+    showPage(initial, { smoothScroll: false });
+    // Skip the lazy fetch (loadPage was already called inside showPage; it
+    // will throw because TOKEN is empty — swallow that quietly).
+    return;
+  }
+  updateChurchBadge();
+  showPage(initial, { smoothScroll: false });
+})();
+</script>
+</body>
+</html>
