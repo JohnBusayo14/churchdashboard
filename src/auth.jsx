@@ -6,7 +6,7 @@ const API_KEY    = 'gofamint_church_api_url';
 const TOKEN_KEY  = 'gofamint_church_token';
 const CHURCH_KEY = 'gofamint_church_meta';
 
-const DEFAULT_API = import.meta.env.VITE_API_URL || 'https://gospelarapp-production.up.railway.app';
+const DEFAULT_API = import.meta.env.VITE_API_URL || 'https://api.gospelar.com';
 
 const readJSON = (k) => {
   try { return JSON.parse(localStorage.getItem(k) || 'null'); }

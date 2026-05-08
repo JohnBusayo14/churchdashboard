@@ -44,7 +44,7 @@ export default function Layout() {
             </div>
             <div className="leading-tight min-w-0">
               <div className="text-[13px] font-semibold text-ink truncate">
-                {church?.name || 'GOFAMINT'}
+                {church?.name || 'Gospelar'}
               </div>
               <div className="text-[11px] text-zinc-500 truncate">Church Leader</div>
             </div>

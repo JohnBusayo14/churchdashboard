@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import {
+  Eye, EyeOff, ShieldCheck, Church, Mail, Lock,
+  Loader2, ArrowRight, AlertCircle,
+} from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { loginRequest } from '../api.js';
 
 export default function Login() {
-  const { isAuthed, signIn, api: defaultApi } = useAuth();
+  const { isAuthed, signIn, api } = useAuth();
   const nav = useNavigate();
 
-  const [api, setApi]           = useState(defaultApi);
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw]     = useState(false);
   const [loading, setLoad]      = useState(false);
   const [error, setError]       = useState('');
-  const [showAdvanced, setAdv]  = useState(false);
 
   if (isAuthed) return <Navigate to="/" replace />;
 
@@ -27,102 +28,122 @@ export default function Login() {
     setLoad(true);
     setError('');
     try {
-      const data = await loginRequest(api.trim(), email.trim().toLowerCase(), password);
+      const data = await loginRequest(api, email.trim().toLowerCase(), password);
       signIn(api, data.admin_token, data.church);
       nav('/', { replace: true });
     } catch (err) {
-      setError(err.message || 'Sign-in failed.');
+      setError(err.message || 'Sign-in failed. Check your email and password.');
     } finally {
       setLoad(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-25 px-4">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-25 px-4 py-12">
+      {/* Background decoration */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-brand-100 blur-3xl opacity-60" />
+        <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-brand-50 blur-3xl opacity-70" />
+      </div>
+
+      <div className="w-full max-w-[420px]">
+        {/* Brand mark */}
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-white shadow-cta">
-            <span className="text-lg">⛪</span>
+          <div className="relative">
+            <div className="absolute inset-0 rounded-2xl bg-brand-600/20 blur-xl" />
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-cta ring-1 ring-white/20">
+              <Church className="h-8 w-8" strokeWidth={2.25} />
+            </div>
           </div>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink">Church Leader Sign-in</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Track attendance, engagement, and lesson progress for your church.
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-ink">
+            Church Leader Sign-in
+          </h1>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            Track attendance, engagement, and lessons for your church.
           </p>
         </div>
 
-        <form onSubmit={submit} className="card p-6">
-          <div className="mb-4">
-            <label className="label">Admin Email</label>
-            <input
-              className="input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="pastor@yourchurch.org"
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="label">Password</label>
-            <div className="relative">
-              <input
-                className="input pr-10"
-                type={showPw ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your church admin password"
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((s) => !s)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100"
-                tabIndex={-1}
-              >
-                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700 ring-1 ring-red-100">
-              {error}
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAdv((s) => !s)}
-            className="mt-3 w-full text-center text-xs font-semibold text-zinc-500 hover:text-ink"
-          >
-            {showAdvanced ? '▴ Hide advanced' : '▾ Advanced'}
-          </button>
-
-          {showAdvanced && (
-            <div className="mt-3 border-t border-zinc-100 pt-3">
-              <label className="label">API URL</label>
+        {/* Card */}
+        <form onSubmit={submit} className="card overflow-hidden">
+          <div className="space-y-4 p-6">
+            <div>
+              <label className="label flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5 text-zinc-400" />
+                Admin Email
+              </label>
               <input
                 className="input"
-                value={api}
-                onChange={(e) => setApi(e.target.value)}
-                placeholder="https://your-api.example.com"
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+                placeholder="pastor@yourchurch.org"
+                autoComplete="email"
+                autoFocus
               />
-              <p className="mt-1 text-[11px] text-zinc-500">
-                Only change this if your church uses a self-hosted GOFAMINT backend.
-              </p>
             </div>
-          )}
 
-          <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-zinc-500">
+            <div>
+              <label className="label flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-zinc-400" />
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  className="input pr-11"
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); if (error) setError(''); }}
+                  placeholder="Your church admin password"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((s) => !s)}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-2 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700"
+                  tabIndex={-1}
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                >
+                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-2.5 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-red-100">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span className="font-medium">{error}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full py-2.5 group"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                <>
+                  Sign in
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Footer band */}
+          <div className="flex items-center justify-center gap-1.5 border-t border-zinc-100 bg-zinc-25 px-6 py-3 text-[11px] text-zinc-500">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            Session stored locally on this device.
+            <span>Session stored locally on this device.</span>
           </div>
         </form>
+
+        <p className="mt-6 text-center text-xs text-zinc-400">
+          Don't have credentials? Contact your district superintendent.
+        </p>
       </div>
     </div>
   );
