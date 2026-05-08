@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import {
   Eye, EyeOff, ShieldCheck, Church, Mail, Lock,
   Loader2, ArrowRight, AlertCircle,
@@ -141,8 +141,11 @@ export default function Login() {
           </div>
         </form>
 
-        <p className="mt-6 text-center text-xs text-zinc-400">
-          Don't have credentials? Contact your district superintendent.
+        <p className="mt-6 text-center text-sm text-zinc-500">
+          New here?{' '}
+          <Link to="/signup" className="font-semibold text-brand-600 hover:text-brand-700">
+            Register your church
+          </Link>
         </p>
       </div>
     </div>

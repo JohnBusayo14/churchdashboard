@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  CalendarDays, TrendingUp, BookOpen, Users, Search, MoreHorizontal,
-  LogOut, ChevronsUpDown,
+  CalendarDays, TrendingUp, BookOpen, Users, UserCheck, Search,
+  MoreHorizontal, LogOut, ChevronsUpDown,
 } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
+import { makeReq } from '../api.js';
 
 const NAV = [
   { section: 'Insights', items: [
@@ -13,14 +14,34 @@ const NAV = [
     { to: '/lessons',    icon: BookOpen,     label: 'Lessons' },
     { to: '/teachers',   icon: Users,        label: 'Teachers' },
   ]},
+  { section: 'Manage', items: [
+    { to: '/approvals',  icon: UserCheck,    label: 'Approvals', badgeKey: 'approvals' },
+  ]},
 ];
 
 const FLAT = NAV.flatMap(s => s.items);
 
 export default function Layout() {
-  const { signOut, church } = useAuth();
+  const { signOut, church, api, token } = useAuth();
   const { pathname } = useLocation();
   const [q, setQ] = useState('');
+  const [badges, setBadges] = useState({});
+
+  // Fetch pending teacher count once on mount, and refresh whenever the
+  // route changes (so approving a teacher in /approvals updates the sidebar
+  // badge as soon as the user navigates away).
+  useEffect(() => {
+    if (!api || !token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const req = makeReq(api, token);
+        const d = await req('/api/church-admin/teachers?status=pending');
+        if (!cancelled) setBadges((b) => ({ ...b, approvals: d?.count || 0 }));
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
+  }, [api, token, pathname]);
 
   const filtered = useMemo(() => {
     if (!q.trim()) return NAV;
@@ -79,7 +100,8 @@ export default function Layout() {
               </div>
               <div className="flex flex-col gap-0.5">
                 {section.items.map((it) => {
-                  const Icon = it.icon;
+                  const Icon  = it.icon;
+                  const count = it.badgeKey ? badges[it.badgeKey] : 0;
                   return (
                     <NavLink
                       key={it.to}
@@ -93,7 +115,12 @@ export default function Layout() {
                       }
                     >
                       <Icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{it.label}</span>
+                      <span className="flex-1 truncate">{it.label}</span>
+                      {count > 0 && (
+                        <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-100 px-1 text-[10px] font-bold text-amber-700">
+                          {count}
+                        </span>
+                      )}
                     </NavLink>
                   );
                 })}
