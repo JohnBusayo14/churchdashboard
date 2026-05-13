@@ -31,10 +31,12 @@ export default function Lessons() {
     try {
       const [lessons, cats] = await Promise.all([
         req('/api/admin/insights/most-completed-lessons?limit=100'),
-        req('/api/admin/insights/lesson-categories').catch(() => ({ categories: [] })),
+        req('/api/admin/insights/lesson-categories').catch(() => []),
       ]);
       setRows(Array.isArray(lessons) ? lessons : []);
-      setByCat(cats?.categories || cats?.rows || []);
+      // Backend returns a raw array; tolerate the {categories} envelope too
+      // in case it gets standardised later.
+      setByCat(Array.isArray(cats) ? cats : (cats?.categories || []));
     } catch (e) {
       toast.error(e.message || 'Failed to load lessons.');
     } finally {

@@ -1,63 +1,82 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  CalendarDays, TrendingUp, BookOpen, Users, UserCheck, Search,
+  LayoutDashboard, Activity, Wallet, HandCoins, Receipt, PiggyBank, BarChart3,
+  Users, Home, HardHat, Megaphone, Share2, Building2, UserCog,
+  School, BookOpen, GraduationCap, CalendarDays, TrendingUp, UserCheck, Award,
+  ClipboardCheck,
+  Settings as SettingsIcon, Search,
   MoreHorizontal, LogOut, ChevronsUpDown,
 } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
-import { makeReq } from '../api.js';
+import { useRole } from '../contexts/RoleContext.jsx';
+import BranchSwitcher from './BranchSwitcher.jsx';
+import RoleSwitcher from './RoleSwitcher.jsx';
 
+// `gate` matches the keys returned by RoleContext.canSee(). Sidebar groups
+// are hidden entirely when none of their items pass the gate.
 const NAV = [
-  { section: 'Insights', items: [
-    { to: '/',           icon: CalendarDays, label: 'Attendance' },
-    { to: '/engagement', icon: TrendingUp,   label: 'Engagement' },
-    { to: '/lessons',    icon: BookOpen,     label: 'Lessons' },
-    { to: '/teachers',   icon: Users,        label: 'Teachers' },
+  { section: 'Overview', items: [
+    { to: '/',         icon: LayoutDashboard, label: 'Dashboard', gate: 'dashboard' },
+    { to: '/activity', icon: Activity,        label: 'Activity',  gate: 'activity' },
   ]},
-  { section: 'Manage', items: [
-    { to: '/approvals',  icon: UserCheck,    label: 'Approvals', badgeKey: 'approvals' },
+  { section: 'Finance', items: [
+    { to: '/finance',   icon: Wallet,    label: 'Overview',  gate: 'finance' },
+    { to: '/donations', icon: HandCoins, label: 'Donations', gate: 'donations' },
+    { to: '/expenses',  icon: Receipt,   label: 'Expenses',  gate: 'expenses' },
+    { to: '/budgets',   icon: PiggyBank, label: 'Budgets',   gate: 'budgets' },
+    { to: '/reports',   icon: BarChart3, label: 'Reports',   gate: 'reports' },
+  ]},
+  { section: 'Community', items: [
+    { to: '/members',   icon: Users,     label: 'Members',   gate: 'members' },
+    { to: '/families',  icon: Home,      label: 'Families',  gate: 'families' },
+    { to: '/workers',   icon: HardHat,   label: 'Workers',   gate: 'workers' },
+    { to: '/campaigns', icon: Megaphone, label: 'Campaigns', gate: 'campaigns' },
+    { to: '/social',    icon: Share2,    label: 'Social',    gate: 'social' },
+  ]},
+  { section: 'Learning', items: [
+    { to: '/classes',      icon: School,          label: 'Classes',      gate: 'classes' },
+    { to: '/lessons',      icon: BookOpen,        label: 'Lessons',      gate: 'lessons' },
+    { to: '/teachers',     icon: GraduationCap,   label: 'Teachers',     gate: 'teachers' },
+    { to: '/marks',        icon: ClipboardCheck,  label: 'Marks',        gate: 'marks' },
+    { to: '/attendance',   icon: CalendarDays,    label: 'Attendance',   gate: 'attendance' },
+    { to: '/engagement',   icon: TrendingUp,      label: 'Engagement',   gate: 'engagement' },
+    { to: '/approvals',    icon: UserCheck,       label: 'Approvals',    gate: 'approvals' },
+    { to: '/certificates', icon: Award,           label: 'Certificates', gate: 'certificates' },
+  ]},
+  { section: 'Admin', items: [
+    { to: '/branches', icon: Building2,    label: 'Branches', gate: 'branches' },
+    { to: '/team',     icon: UserCog,      label: 'Team',     gate: 'team' },
+    { to: '/settings', icon: SettingsIcon, label: 'Settings', gate: 'settings' },
   ]},
 ];
 
-const FLAT = NAV.flatMap(s => s.items);
-
 export default function Layout() {
-  const { signOut, church, api, token } = useAuth();
+  const { signOut, church } = useAuth();
+  const { canSee } = useRole();
   const { pathname } = useLocation();
   const [q, setQ] = useState('');
-  const [badges, setBadges] = useState({});
 
-  // Fetch pending teacher count once on mount, and refresh whenever the
-  // route changes (so approving a teacher in /approvals updates the sidebar
-  // badge as soon as the user navigates away).
-  useEffect(() => {
-    if (!api || !token) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const req = makeReq(api, token);
-        const d = await req('/api/church-admin/teachers?status=pending');
-        if (!cancelled) setBadges((b) => ({ ...b, approvals: d?.count || 0 }));
-      } catch { /* silent */ }
-    })();
-    return () => { cancelled = true; };
-  }, [api, token, pathname]);
+  const gated = useMemo(() => {
+    return NAV
+      .map((s) => ({ ...s, items: s.items.filter((it) => canSee(it.gate)) }))
+      .filter((s) => s.items.length);
+  }, [canSee]);
 
   const filtered = useMemo(() => {
-    if (!q.trim()) return NAV;
+    if (!q.trim()) return gated;
     const term = q.toLowerCase();
-    return NAV
-      .map(s => ({ ...s, items: s.items.filter(i => i.label.toLowerCase().includes(term)) }))
-      .filter(s => s.items.length);
-  }, [q]);
+    return gated
+      .map((s) => ({ ...s, items: s.items.filter((i) => i.label.toLowerCase().includes(term)) }))
+      .filter((s) => s.items.length);
+  }, [gated, q]);
 
-  const current = FLAT.find(i => i.to === pathname) || FLAT[0];
+  const flat = useMemo(() => gated.flatMap((s) => s.items), [gated]);
+  const current = flat.find((i) => i.to === pathname) || flat[0];
 
   return (
     <div className="flex min-h-screen bg-white">
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-zinc-200 bg-zinc-25">
-        {/* Brand */}
         <div className="flex items-center justify-between px-3 py-3 border-b border-zinc-200">
           <div className="flex items-center gap-2.5 px-2 min-w-0">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-white text-sm font-bold shrink-0">
@@ -67,7 +86,7 @@ export default function Layout() {
               <div className="text-[13px] font-semibold text-ink truncate">
                 {church?.name || 'Gospelar'}
               </div>
-              <div className="text-[11px] text-zinc-500 truncate">Church Leader</div>
+              <div className="text-[11px] text-zinc-500 truncate">Church Admin</div>
             </div>
           </div>
           <button className="rounded-md p-1 hover:bg-zinc-150 text-zinc-500 shrink-0" title="Switch">
@@ -75,7 +94,6 @@ export default function Layout() {
           </button>
         </div>
 
-        {/* Quick search */}
         <div className="px-3 py-3 border-b border-zinc-200">
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
@@ -91,7 +109,6 @@ export default function Layout() {
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-3">
           {filtered.map((section) => (
             <div key={section.section} className="mb-4">
@@ -100,8 +117,7 @@ export default function Layout() {
               </div>
               <div className="flex flex-col gap-0.5">
                 {section.items.map((it) => {
-                  const Icon  = it.icon;
-                  const count = it.badgeKey ? badges[it.badgeKey] : 0;
+                  const Icon = it.icon;
                   return (
                     <NavLink
                       key={it.to}
@@ -116,11 +132,6 @@ export default function Layout() {
                     >
                       <Icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1 truncate">{it.label}</span>
-                      {count > 0 && (
-                        <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-100 px-1 text-[10px] font-bold text-amber-700">
-                          {count}
-                        </span>
-                      )}
                     </NavLink>
                   );
                 })}
@@ -129,7 +140,6 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Foot */}
         <div className="border-t border-zinc-200 p-3">
           <button
             onClick={signOut}
@@ -140,16 +150,16 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ── Main ────────────────────────────────────────────────────────── */}
       <main className="flex min-w-0 flex-1 flex-col">
-        {/* Topbar */}
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/80 px-5 backdrop-blur">
           <div className="flex items-center gap-2">
             <h1 className="text-[15px] font-semibold text-ink tracking-tight">
-              {current?.label || 'Attendance'}
+              {current?.label || 'Dashboard'}
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <BranchSwitcher />
+            <RoleSwitcher />
             <button className="rounded-md p-2 text-zinc-500 hover:bg-zinc-100" title="More">
               <MoreHorizontal className="h-4 w-4" />
             </button>
