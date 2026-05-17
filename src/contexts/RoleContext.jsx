@@ -43,10 +43,12 @@ const CAN_PREVIEW = new Set(ALL_ROLES);
 
 export function RoleProvider({ children }) {
   const { staff, isAuthed } = useAuth();
-  // Until /api/church-admin/me returns a staff row, default new sessions to
-  // sunday_school_teacher so the menu lands on the Learning tools (the team
-  // we're actively building out). Once /me lands, the real role replaces this.
-  const actualRole = staff?.role || (isAuthed ? 'sunday_school_teacher' : 'member');
+  // The dashboard is a church-admin surface — only the church admin (pastor)
+  // holds the token in the first place. Default to 'pastor' so an approved
+  // church account lands on the full menu even before /api/church-admin/me
+  // returns a real staff row. Matches the backend's middleware fallback in
+  // backend/middleware/auth.js when no staff row exists for the admin email.
+  const actualRole = staff?.role || (isAuthed ? 'pastor' : 'member');
 
   const [viewAsRole, setViewAs] = useState(() => {
     const raw = localStorage.getItem(VIEW_AS_KEY);

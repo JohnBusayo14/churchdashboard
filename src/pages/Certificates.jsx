@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Award, Plus, Search, Printer, Trash2, Sparkles, ScrollText,
+  Award, Plus, Search, Printer, Trash2, Sparkles, ScrollText, Share2, Check,
 } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { useBranch } from '../contexts/BranchContext.jsx';
@@ -370,12 +370,45 @@ function IssueModal({ open, req, onClose, onSave }) {
 }
 
 function PrintableModal({ certificate, onClose }) {
-  const { church } = useAuth();
+  const { church, staff } = useAuth();
+  const toast = useToast();
+  const [copied, setCopied] = useState(false);
   if (!certificate) return null;
   const c = certificate;
   const date = new Date(c.awarded_at).toLocaleDateString('en-NG', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
+  // Display name for "Awarded by". Backend now stores the staff display name
+  // for newly issued certs, but historical rows may still carry an email or
+  // be empty — in that case use the current session's name as the best guess.
+  const issuerLabel = c.awarded_by || staff?.name || 'Church Admin';
+
+  // Public share URL. Uses the production church-dashboard origin so the
+  // copied link works no matter where the dashboard is currently running
+  // (localhost during dev, staging, etc.).
+  const SHARE_ORIGIN = 'https://church.gospelar.com';
+  const shareUrl = `${SHARE_ORIGIN}/verify/${encodeURIComponent(c.certificate_no)}`;
+  const shareText = `🎓 ${c.title} — awarded to ${c.student_name} by ${church?.name || 'Gospelar'}. Verify: ${shareUrl}`;
+
+  async function share() {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: c.title, text: shareText, url: shareUrl });
+        return;
+      } catch (e) {
+        if (e?.name === 'AbortError') return; // user cancelled the sheet
+        // fall through to clipboard fallback
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+      toast?.success('Share link copied.');
+    } catch {
+      toast?.error('Could not copy. Long-press the URL field to copy manually.');
+    }
+  }
 
   return (
     <Modal
@@ -386,6 +419,15 @@ function PrintableModal({ certificate, onClose }) {
       footer={
         <>
           <button type="button" onClick={onClose} className="btn-ghost">Close</button>
+          <button
+            type="button"
+            onClick={share}
+            className="btn-soft"
+          >
+            {copied
+              ? <><Check className="h-3.5 w-3.5" /> Copied</>
+              : <><Share2 className="h-3.5 w-3.5" /> Share</>}
+          </button>
           <button
             type="button"
             onClick={() => window.print()}
@@ -444,11 +486,27 @@ function PrintableModal({ certificate, onClose }) {
           </div>
           <div>
             <div className="border-b-2 border-zinc-300 pb-1 text-sm font-bold text-ink min-w-[140px]">
-              {c.awarded_by || 'Church Admin'}
+              {issuerLabel}
             </div>
             <div className="mt-1 text-[10px] uppercase tracking-wider text-zinc-500">Awarded by</div>
           </div>
         </div>
+      </div>
+
+      {/* Share strip — only visible on-screen; hidden when printing because
+          the cert-print class scopes the print stylesheet to the certificate
+          card above. */}
+      <div className="mt-4 rounded-lg ring-1 ring-zinc-200 bg-zinc-25 px-3 py-2.5 flex items-center gap-2">
+        <Share2 className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 shrink-0">
+          Share link
+        </span>
+        <input
+          readOnly
+          value={shareUrl}
+          onFocus={(e) => e.target.select()}
+          className="flex-1 min-w-0 bg-white rounded-md ring-1 ring-zinc-200 px-2 py-1 text-xs font-mono text-zinc-700"
+        />
       </div>
     </Modal>
   );

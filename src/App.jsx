@@ -23,6 +23,7 @@ import Engagement    from './pages/Engagement.jsx';
 import Approvals     from './pages/Approvals.jsx';
 import Marks         from './pages/Marks.jsx';
 import Certificates  from './pages/Certificates.jsx';
+import CertificateVerify from './pages/CertificateVerify.jsx';
 import Branches      from './pages/Branches.jsx';
 import Team          from './pages/Team.jsx';
 import Settings      from './pages/Settings.jsx';
@@ -37,6 +38,9 @@ export default function App() {
     <Routes>
       <Route path="/login"  element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      {/* Public certificate verification — accessible without login so the
+          share URL works for any recipient with the code. */}
+      <Route path="/verify/:certificate_no" element={<CertificateVerify />} />
       <Route
         path="/"
         element={
