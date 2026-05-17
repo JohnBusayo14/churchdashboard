@@ -259,6 +259,14 @@ export default function Classes() {
   );
 }
 
+// `local_*@local.gofamint` emails are synthetic placeholders the backend
+// mints when a teacher adds a student by name only (see backend
+// routes/teacher.js). They're stable keys, not addresses anyone reads, so
+// the UI hides them entirely and shows a "name only" hint instead.
+function isLocalEmail(e) {
+  return typeof e === 'string' && e.toLowerCase().endsWith('@local.gofamint');
+}
+
 // Roster body is its own component so the modal can show a skeleton while
 // the fetch is in flight without keeping the whole Classes.jsx busy.
 function RosterBody({ loading, roster }) {
@@ -304,12 +312,24 @@ function RosterBody({ loading, roster }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
-            {students.map((s) => (
+            {students.map((s) => {
+              const localOnly = isLocalEmail(s.email);
+              return (
               <tr key={s.email}>
                 <td className="py-2 pr-3">
-                  <div className="font-medium text-ink">{s.name}</div>
+                  <div className="flex items-center gap-2">
+                    {s.avatar_emoji && (
+                      <span className="text-base leading-none" aria-hidden="true">{s.avatar_emoji}</span>
+                    )}
+                    <div className="font-medium text-ink">{s.name}</div>
+                  </div>
                   <div className="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-500">
-                    <Mail className="h-3 w-3" /> {s.email}
+                    {localOnly ? (
+                      // Name-only enrollment by the teacher — no real address to show.
+                      <span className="italic text-zinc-400">No email · added by teacher</span>
+                    ) : (
+                      <><Mail className="h-3 w-3" /> {s.email}</>
+                    )}
                     {s.status && s.status !== 'approved' && (
                       <Badge variant="amber" className="ml-1">{s.status}</Badge>
                     )}
@@ -331,7 +351,8 @@ function RosterBody({ loading, roster }) {
                   {fmtRel(s.last_active_at)}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
