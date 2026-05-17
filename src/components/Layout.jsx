@@ -52,7 +52,7 @@ const NAV = [
 ];
 
 export default function Layout() {
-  const { signOut, church } = useAuth();
+  const { signOut } = useAuth();
   const { canSee } = useRole();
   const { pathname } = useLocation();
   const [q, setQ] = useState('');
@@ -79,12 +79,14 @@ export default function Layout() {
       <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-zinc-200 bg-zinc-25">
         <div className="flex items-center justify-between px-3 py-3 border-b border-zinc-200">
           <div className="flex items-center gap-2.5 px-2 min-w-0">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-white text-sm font-bold shrink-0">
-              ⛪
-            </div>
+            <img
+              src="/logo.png"
+              alt="Gospelar"
+              className="h-7 w-7 rounded-md object-contain shrink-0"
+            />
             <div className="leading-tight min-w-0">
               <div className="text-[13px] font-semibold text-ink truncate">
-                {church?.name || 'Gospelar'}
+                Gospelar
               </div>
               <div className="text-[11px] text-zinc-500 truncate">Church Admin</div>
             </div>

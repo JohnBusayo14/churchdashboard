@@ -35,16 +35,18 @@ export const ROLE_MENU = {
   member:      ['dashboard'],
 };
 
-// Only these roles can preview a different role.
-const CAN_PREVIEW = new Set(['super_admin', 'pastor']);
+// Any signed-in user can pick which role-view to use from the header. The
+// sidebar gate is UI-only — the backend still enforces real permissions on
+// /api/church-admin/* — so this is just letting people see the menus that
+// belong to whichever team they want to work on.
+const CAN_PREVIEW = new Set(ALL_ROLES);
 
 export function RoleProvider({ children }) {
   const { staff, isAuthed } = useAuth();
-  // The dashboard is a church-admin surface — only the church admin (pastor)
-  // has the token in the first place. Until /api/church-admin/me returns a
-  // staff row we treat the caller as a pastor so the menu doesn't collapse to
-  // an empty shell. Once /me lands, the real role replaces this.
-  const actualRole = staff?.role || (isAuthed ? 'pastor' : 'member');
+  // Until /api/church-admin/me returns a staff row, default new sessions to
+  // sunday_school_teacher so the menu lands on the Learning tools (the team
+  // we're actively building out). Once /me lands, the real role replaces this.
+  const actualRole = staff?.role || (isAuthed ? 'sunday_school_teacher' : 'member');
 
   const [viewAsRole, setViewAs] = useState(() => {
     const raw = localStorage.getItem(VIEW_AS_KEY);
