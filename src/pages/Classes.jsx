@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   School, RefreshCcw, Search, Users as UsersIcon, Calendar, ShieldCheck,
-  AlertTriangle, BookOpen,
+  AlertTriangle, BookOpen, GraduationCap, Star, ChevronRight, Mail, CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { useBranch } from '../contexts/BranchContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { makeReq } from '../api.js';
 import Badge from '../components/Badge.jsx';
+import Modal from '../components/Modal.jsx';
 
 const CAT_PILL = {
   adult:        'violet',
@@ -36,6 +37,13 @@ export default function Classes() {
   const [cat, setCat]     = useState('all');
   const [loading, setLoading] = useState(true);
 
+  // Roster panel — open when the admin clicks a class row. `roster` holds
+  // the response once it lands; `rosterLoading` covers the in-flight fetch
+  // so the modal can show a skeleton while the request resolves.
+  const [openClass, setOpenClass]       = useState(null);   // the row that was clicked
+  const [roster, setRoster]             = useState(null);   // { class, students, count }
+  const [rosterLoading, setRosterLoading] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -49,6 +57,29 @@ export default function Classes() {
   }, [req, toast]);
 
   useEffect(() => { load(); }, [load, activeBranchId]);
+
+  // Open the roster for a class. We fetch every time rather than cache —
+  // enrollment changes often enough during a term that a stale cached list
+  // would be more confusing than a quick re-fetch.
+  const openRoster = useCallback(async (cls) => {
+    setOpenClass(cls);
+    setRoster(null);
+    setRosterLoading(true);
+    try {
+      const r = await req(`/api/church-admin/learning/classes/${cls.id}/students`);
+      setRoster(r);
+    } catch (e) {
+      toast?.error(e.message || 'Failed to load students.');
+      setOpenClass(null);
+    } finally {
+      setRosterLoading(false);
+    }
+  }, [req, toast]);
+
+  const closeRoster = useCallback(() => {
+    setOpenClass(null);
+    setRoster(null);
+  }, []);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -157,11 +188,23 @@ export default function Classes() {
                   <th className="px-5 py-2.5 text-right">Lessons</th>
                   <th className="px-5 py-2.5 text-right">Attendance</th>
                   <th className="px-5 py-2.5 text-right">Last active</th>
+                  <th className="px-3 py-2.5 w-8" aria-hidden="true" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {filtered.map((c) => (
-                  <tr key={c.id}>
+                  <tr
+                    key={c.id}
+                    onClick={() => openRoster(c)}
+                    className="cursor-pointer hover:bg-zinc-50 focus-within:bg-zinc-50"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openRoster(c);
+                      }
+                    }}
+                  >
                     <td className="px-5 py-2.5">
                       <div className="font-semibold text-ink">{c.name}</div>
                       <div className="mt-0.5">
@@ -187,12 +230,110 @@ export default function Classes() {
                       <Calendar className="h-3 w-3 text-zinc-400" />
                       {fmtRel(c.last_active_at)}
                     </td>
+                    <td className="px-3 py-2.5 text-zinc-300">
+                      <ChevronRight className="h-4 w-4" />
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
+      </div>
+
+      {/* Roster modal — opens when a class row is clicked. Shows the
+          students enrolled by the teacher in that class, with at-a-glance
+          attendance, marks and total points for the class. */}
+      <Modal
+        open={!!openClass}
+        onClose={closeRoster}
+        size="xl"
+        title={openClass ? openClass.name : 'Class roster'}
+        sub={openClass
+          ? `${openClass.teacher_name || openClass.teacher_email} · invite ${openClass.invite_code}`
+          : null}
+      >
+        <RosterBody loading={rosterLoading} roster={roster} />
+      </Modal>
+    </div>
+  );
+}
+
+// Roster body is its own component so the modal can show a skeleton while
+// the fetch is in flight without keeping the whole Classes.jsx busy.
+function RosterBody({ loading, roster }) {
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-10 w-full animate-pulse rounded bg-zinc-100" />
+        ))}
+      </div>
+    );
+  }
+  if (!roster) return null;
+  const { students = [], count = 0 } = roster;
+
+  if (!students.length) {
+    return (
+      <div className="py-10 text-center">
+        <GraduationCap className="mx-auto h-8 w-8 text-zinc-300" />
+        <div className="mt-2 text-sm font-medium text-zinc-500">No students enrolled yet.</div>
+        <p className="mt-1 text-xs text-zinc-400">
+          Students join by entering the teacher's invite code in the mobile app.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+        {count} {count === 1 ? 'student' : 'students'} enrolled
+      </div>
+      <div className="overflow-x-auto -mx-5 px-5">
+        <table className="w-full text-sm tabular">
+          <thead>
+            <tr className="text-left text-[11px] font-bold uppercase tracking-wider text-zinc-500 border-b border-zinc-100">
+              <th className="py-2 pr-3">Student</th>
+              <th className="py-2 px-3 text-right">Attendance</th>
+              <th className="py-2 px-3 text-right">Marks</th>
+              <th className="py-2 px-3 text-right">Points</th>
+              <th className="py-2 px-3 text-right">Joined</th>
+              <th className="py-2 pl-3 text-right">Last active</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-zinc-100">
+            {students.map((s) => (
+              <tr key={s.email}>
+                <td className="py-2 pr-3">
+                  <div className="font-medium text-ink">{s.name}</div>
+                  <div className="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-500">
+                    <Mail className="h-3 w-3" /> {s.email}
+                    {s.status && s.status !== 'approved' && (
+                      <Badge variant="amber" className="ml-1">{s.status}</Badge>
+                    )}
+                  </div>
+                </td>
+                <td className="py-2 px-3 text-right text-zinc-800 inline-flex items-center gap-1 justify-end w-full">
+                  {s.attendance_count > 0 && <CheckCircle2 className="h-3 w-3 text-emerald-600" />}
+                  {s.attendance_count || 0}
+                </td>
+                <td className="py-2 px-3 text-right text-zinc-800">{s.marks_count || 0}</td>
+                <td className="py-2 px-3 text-right text-ink font-semibold inline-flex items-center gap-1 justify-end w-full">
+                  {s.total_points > 0 && <Star className="h-3 w-3 text-amber-500" />}
+                  {s.total_points || 0}
+                </td>
+                <td className="py-2 px-3 text-right text-xs text-zinc-500">
+                  {s.joined_at ? new Date(s.joined_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                </td>
+                <td className="py-2 pl-3 text-right text-xs text-zinc-500">
+                  {fmtRel(s.last_active_at)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
