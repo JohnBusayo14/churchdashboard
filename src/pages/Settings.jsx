@@ -245,7 +245,7 @@ function BackendPanel() {
               className="input flex-1"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="https://api.gospelar.com"
+              placeholder="https://api2.gospelar.com"
             />
             <button onClick={() => probe(draft)} disabled={checking} className="btn-ghost whitespace-nowrap">
               {checking ? 'Checking…' : 'Test'}

@@ -9,7 +9,14 @@ const CHURCH_KEY  = 'gofamint_church_meta';
 const STAFF_KEY   = 'gofamint_church_staff';
 const BRANCHES_KEY = 'gofamint_church_branches';
 
-const DEFAULT_API = import.meta.env.VITE_API_URL || 'https://api.gospelar.com';
+const DEFAULT_API = import.meta.env.VITE_API_URL || 'https://api2.gospelar.com';
+
+// Sessions saved before the host moved still hold the old URL in localStorage.
+const RETIRED_API_HOSTS = ['https://api.gospelar.com'];
+const storedApi = () => {
+  const v = (localStorage.getItem(API_KEY) || '').replace(/\/$/, '');
+  return v && !RETIRED_API_HOSTS.includes(v) ? v : '';
+};
 
 const readJSON = (k) => {
   try { return JSON.parse(localStorage.getItem(k) || 'null'); }
@@ -17,7 +24,7 @@ const readJSON = (k) => {
 };
 
 export function AuthProvider({ children }) {
-  const [api, setApi]       = useState(() => localStorage.getItem(API_KEY) || DEFAULT_API);
+  const [api, setApi]       = useState(() => storedApi() || DEFAULT_API);
   const [token, setToken]   = useState(() => localStorage.getItem(TOKEN_KEY) || '');
   const [church, setChurch] = useState(() => readJSON(CHURCH_KEY));
   const [staff, setStaff]       = useState(() => readJSON(STAFF_KEY));
