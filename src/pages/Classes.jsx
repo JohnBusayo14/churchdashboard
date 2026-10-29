@@ -9,6 +9,7 @@ import { useToast } from '../components/Toast.jsx';
 import { makeReq } from '../api.js';
 import Badge from '../components/Badge.jsx';
 import Modal from '../components/Modal.jsx';
+import { isLocalEmail } from '../lib/email.js';
 
 const CAT_PILL = {
   adult:        'violet',
@@ -257,14 +258,6 @@ export default function Classes() {
       </Modal>
     </div>
   );
-}
-
-// `local_*@local.gofamint` emails are synthetic placeholders the backend
-// mints when a teacher adds a student by name only (see backend
-// routes/teacher.js). They're stable keys, not addresses anyone reads, so
-// the UI hides them entirely and shows a "name only" hint instead.
-function isLocalEmail(e) {
-  return typeof e === 'string' && e.toLowerCase().endsWith('@local.gofamint');
 }
 
 // Roster body is its own component so the modal can show a skeleton while

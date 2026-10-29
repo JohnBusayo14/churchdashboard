@@ -3,6 +3,7 @@ import { Activity as ActivityIcon, RefreshCcw, Filter } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { useBranch } from '../contexts/BranchContext.jsx';
 import { makeReq } from '../api.js';
+import { personLabel } from '../lib/email.js';
 
 const POLL_MS = 10_000;
 
@@ -125,7 +126,7 @@ export default function Activity() {
                       </div>
                     </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
-                      <span>{it.actor_name || it.actor_email || 'System'}</span>
+                      <span>{personLabel(it.actor_name, it.actor_email, 'System')}</span>
                       <span className="text-zinc-300">·</span>
                       <code className="rounded bg-zinc-100 px-1 py-px text-[10px] text-zinc-600">{it.action}</code>
                       {it.entity_type && (

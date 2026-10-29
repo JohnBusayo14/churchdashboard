@@ -7,6 +7,7 @@ import { useBranch } from '../contexts/BranchContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import Modal from '../components/Modal.jsx';
 import { makeReq } from '../api.js';
+import { displayEmail } from '../lib/email.js';
 
 const CERT_TYPES = [
   { v: 'completion',    label: 'Completion',    title: 'Certificate of Completion' },
@@ -291,7 +292,7 @@ function IssueModal({ open, req, onClose, onSave }) {
                   >
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-ink">{s.student_name}</div>
-                      <div className="text-[11px] text-zinc-500">{s.student_email}</div>
+                      <div className="text-[11px] text-zinc-500">{displayEmail(s.student_email)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-[11px] text-zinc-500">
@@ -311,7 +312,7 @@ function IssueModal({ open, req, onClose, onSave }) {
         <form id="cert-form" onSubmit={submit} className="grid grid-cols-2 gap-3">
           <div className="col-span-2 rounded-lg bg-zinc-25 p-3 ring-1 ring-zinc-200">
             <div className="text-sm font-semibold text-ink">{picked?.student_name}</div>
-            <div className="text-xs text-zinc-500">{picked?.student_email}</div>
+            <div className="text-xs text-zinc-500">{displayEmail(picked?.student_email)}</div>
             <div className="mt-1 text-[11px] text-zinc-500">
               {picked?.lessons_completed} lessons completed · {picked?.marks_received} teacher marks
             </div>

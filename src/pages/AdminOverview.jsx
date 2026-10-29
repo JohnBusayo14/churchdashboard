@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../auth.jsx';
 import { useBranch } from '../contexts/BranchContext.jsx';
 import { makeReq } from '../api.js';
+import { personLabel } from '../lib/email.js';
 
 const POLL_MS = 10_000;
 
@@ -288,7 +289,7 @@ function ActivityFeed({ items, loading }) {
             <div className="min-w-0 flex-1">
               <div className="text-[13px] text-ink leading-snug">{it.summary}</div>
               <div className="mt-0.5 text-[11px] text-zinc-500">
-                {it.actor_name || it.actor_email || 'System'} · {relTime(it.created_at)}
+                {personLabel(it.actor_name, it.actor_email, 'System')} · {relTime(it.created_at)}
               </div>
             </div>
           </div>

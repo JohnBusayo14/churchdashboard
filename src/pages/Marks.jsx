@@ -8,6 +8,7 @@ import { useBranch } from '../contexts/BranchContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { makeReq } from '../api.js';
 import Badge from '../components/Badge.jsx';
+import { displayEmail } from '../lib/email.js';
 
 const POLL_MS = 15_000;
 
@@ -494,7 +495,7 @@ function ClassTab({ req }) {
                   <tr key={s.email}>
                     <td className="px-5 py-2.5 sticky left-0 bg-white">
                       <div className="font-semibold text-ink">{s.name}</div>
-                      <div className="text-[11px] text-zinc-500">{s.email}</div>
+                      <div className="text-[11px] text-zinc-500">{displayEmail(s.email)}</div>
                       {s.left_class && (
                         <Badge variant="zinc" className="mt-0.5">Left class</Badge>
                       )}
@@ -654,7 +655,7 @@ function StudentTab({ req }) {
                 >
                   <td className="px-5 py-2.5">
                     <div className="font-semibold text-ink">{s.student_name}</div>
-                    <div className="text-[11px] text-zinc-500">{s.student_email}</div>
+                    <div className="text-[11px] text-zinc-500">{displayEmail(s.student_email)}</div>
                   </td>
                   <td className="px-5 py-2.5 text-right">{fmtNum(s.classes_count)}</td>
                   <td className="px-5 py-2.5 text-right">{fmtNum(s.lessons_completed)}</td>
@@ -684,7 +685,7 @@ function StudentScorecard({ picked, data, loading, onBack }) {
           <h2 className="mt-1 text-xl font-bold text-ink">
             {picked.student_name}
           </h2>
-          <p className="text-xs text-zinc-500">{picked.student_email}</p>
+          <p className="text-xs text-zinc-500">{displayEmail(picked.student_email)}</p>
         </div>
       </div>
 

@@ -27,6 +27,7 @@ import CertificateVerify from './pages/CertificateVerify.jsx';
 import Branches      from './pages/Branches.jsx';
 import Team          from './pages/Team.jsx';
 import Settings      from './pages/Settings.jsx';
+import { DISABLED_PATHS } from './disabledFeatures.js';
 
 const Guard = ({ children }) => {
   const { isAuthed } = useAuth();
@@ -51,16 +52,16 @@ export default function App() {
       >
         <Route index            element={<AdminOverview />} />
         <Route path="activity"  element={<Activity />} />
-        <Route path="finance"   element={<Finance />} />
-        <Route path="donations" element={<Donations />} />
-        <Route path="expenses"  element={<Expenses />} />
-        <Route path="budgets"   element={<Budgets />} />
-        <Route path="reports"   element={<Reports />} />
+        <Route path="finance"   element={DISABLED_PATHS.includes('/finance') ? <Navigate to="/" replace /> : <Finance />} />
+        <Route path="donations" element={DISABLED_PATHS.includes('/donations') ? <Navigate to="/" replace /> : <Donations />} />
+        <Route path="expenses"  element={DISABLED_PATHS.includes('/expenses') ? <Navigate to="/" replace /> : <Expenses />} />
+        <Route path="budgets"   element={DISABLED_PATHS.includes('/budgets') ? <Navigate to="/" replace /> : <Budgets />} />
+        <Route path="reports"   element={DISABLED_PATHS.includes('/reports') ? <Navigate to="/" replace /> : <Reports />} />
         <Route path="members"   element={<Members />} />
         <Route path="families"  element={<Families />} />
         <Route path="workers"   element={<Workers />} />
-        <Route path="campaigns" element={<Campaigns />} />
-        <Route path="social"    element={<SocialMedia />} />
+        <Route path="campaigns" element={DISABLED_PATHS.includes('/campaigns') ? <Navigate to="/" replace /> : <Campaigns />} />
+        <Route path="social"    element={DISABLED_PATHS.includes('/social') ? <Navigate to="/" replace /> : <SocialMedia />} />
         <Route path="classes"      element={<Classes />} />
         <Route path="lessons"      element={<Lessons />} />
         <Route path="teachers"     element={<Teachers />} />

@@ -4,6 +4,7 @@ import { useAuth } from '../auth.jsx';
 import { makeReq } from '../api.js';
 import { useToast } from '../components/Toast.jsx';
 import Badge from '../components/Badge.jsx';
+import { displayEmail } from '../lib/email.js';
 
 const WINDOWS = [
   { v: 7,   label: 'Last 7 days' },
@@ -141,7 +142,7 @@ export default function Engagement() {
                         <span className="text-base">{l.avatar_emoji || '👤'}</span>
                         <div className="min-w-0">
                           <div className="font-semibold text-ink">{l.display_name}</div>
-                          <div className="text-[11px] text-zinc-500">{l.email}</div>
+                          <div className="text-[11px] text-zinc-500">{displayEmail(l.email)}</div>
                         </div>
                       </div>
                     </td>

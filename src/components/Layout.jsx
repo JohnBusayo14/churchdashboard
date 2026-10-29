@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Activity, Wallet, HandCoins, Receipt, PiggyBank, BarChart3,
   Users, Home, HardHat, Megaphone, Share2, Building2, UserCog,
   School, BookOpen, GraduationCap, CalendarDays, TrendingUp, UserCheck, Award,
-  ClipboardCheck,
+  ClipboardCheck, Lock,
   Settings as SettingsIcon, Search,
   MoreHorizontal, LogOut, ChevronsUpDown,
 } from 'lucide-react';
@@ -12,6 +12,7 @@ import { useAuth } from '../auth.jsx';
 import { useRole } from '../contexts/RoleContext.jsx';
 import BranchSwitcher from './BranchSwitcher.jsx';
 import RoleSwitcher from './RoleSwitcher.jsx';
+import { DISABLED_PATHS } from '../disabledFeatures.js';
 
 // `gate` matches the keys returned by RoleContext.canSee(). Sidebar groups
 // are hidden entirely when none of their items pass the gate.
@@ -120,6 +121,22 @@ export default function Layout() {
               <div className="flex flex-col gap-0.5">
                 {section.items.map((it) => {
                   const Icon = it.icon;
+                  if (DISABLED_PATHS.includes(it.to)) {
+                    // Switched off for churches for now: visible but not clickable.
+                    return (
+                      <div
+                        key={it.to}
+                        role="link"
+                        aria-disabled="true"
+                        title="Not available yet"
+                        className="flex cursor-not-allowed select-none items-center gap-2.5 rounded-md px-2 py-1.5 text-[13.5px] font-medium text-zinc-400 opacity-60"
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="flex-1 truncate">{it.label}</span>
+                        <Lock className="h-3 w-3 shrink-0" />
+                      </div>
+                    );
+                  }
                   return (
                     <NavLink
                       key={it.to}
