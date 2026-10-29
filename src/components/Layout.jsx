@@ -21,13 +21,6 @@ const NAV = [
     { to: '/',         icon: LayoutDashboard, label: 'Dashboard', gate: 'dashboard' },
     { to: '/activity', icon: Activity,        label: 'Activity',  gate: 'activity' },
   ]},
-  { section: 'Finance', items: [
-    { to: '/finance',   icon: Wallet,    label: 'Overview',  gate: 'finance' },
-    { to: '/donations', icon: HandCoins, label: 'Donations', gate: 'donations' },
-    { to: '/expenses',  icon: Receipt,   label: 'Expenses',  gate: 'expenses' },
-    { to: '/budgets',   icon: PiggyBank, label: 'Budgets',   gate: 'budgets' },
-    { to: '/reports',   icon: BarChart3, label: 'Reports',   gate: 'reports' },
-  ]},
   { section: 'Community', items: [
     { to: '/members',   icon: Users,     label: 'Members',   gate: 'members' },
     { to: '/families',  icon: Home,      label: 'Families',  gate: 'families' },
@@ -44,6 +37,13 @@ const NAV = [
     { to: '/engagement',   icon: TrendingUp,      label: 'Engagement',   gate: 'engagement' },
     { to: '/approvals',    icon: UserCheck,       label: 'Approvals',    gate: 'approvals' },
     { to: '/certificates', icon: Award,           label: 'Certificates', gate: 'certificates' },
+  ]},
+  { section: 'Finance', items: [
+    { to: '/finance',   icon: Wallet,    label: 'Overview',  gate: 'finance' },
+    { to: '/donations', icon: HandCoins, label: 'Donations', gate: 'donations' },
+    { to: '/expenses',  icon: Receipt,   label: 'Expenses',  gate: 'expenses' },
+    { to: '/budgets',   icon: PiggyBank, label: 'Budgets',   gate: 'budgets' },
+    { to: '/reports',   icon: BarChart3, label: 'Reports',   gate: 'reports' },
   ]},
   { section: 'Admin', items: [
     { to: '/branches', icon: Building2,    label: 'Branches', gate: 'branches' },
