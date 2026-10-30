@@ -1,3 +1,4 @@
+import { PRIMARY_API } from './apiFailover.js';
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { makeReq } from './api.js';
 
@@ -9,13 +10,13 @@ const CHURCH_KEY  = 'gofamint_church_meta';
 const STAFF_KEY   = 'gofamint_church_staff';
 const BRANCHES_KEY = 'gofamint_church_branches';
 
-const DEFAULT_API = import.meta.env.VITE_API_URL || 'https://api2.gospelar.com';
+// Either Gospelar host works — apiFailover.js routes requests to whichever
+// of api / api2.gospelar.com is healthy.
+const DEFAULT_API = import.meta.env.VITE_API_URL || PRIMARY_API;
 
-// Sessions saved before the host moved still hold the old URL in localStorage.
-const RETIRED_API_HOSTS = ['https://api.gospelar.com'];
 const storedApi = () => {
   const v = (localStorage.getItem(API_KEY) || '').replace(/\/$/, '');
-  return v && !RETIRED_API_HOSTS.includes(v) ? v : '';
+  return v || '';
 };
 
 const readJSON = (k) => {

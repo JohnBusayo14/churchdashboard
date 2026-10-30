@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ShieldCheck, UserCog, Bell, CreditCard, Plug, Server, Check, AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '../auth.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { activeApiHost, isGospelarApi, onApiHostChange, API_HOSTS } from '../apiFailover.js';
 
 const TABS = [
   { v: 'backend',  label: 'Backend',             icon: Server },
@@ -197,6 +198,8 @@ function BackendPanel() {
   const [status, setStatus]   = useState('idle');   // idle | ok | fail
   const [checking, setChecking] = useState(false);
   const [version, setVersion] = useState(null);
+  const [liveHost, setLiveHost] = useState(activeApiHost);
+  useEffect(() => onApiHostChange(setLiveHost), []);
 
   const probe = async (url) => {
     setChecking(true);
@@ -245,7 +248,7 @@ function BackendPanel() {
               className="input flex-1"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="https://api2.gospelar.com"
+              placeholder="https://api.gospelar.com"
             />
             <button onClick={() => probe(draft)} disabled={checking} className="btn-ghost whitespace-nowrap">
               {checking ? 'Checking…' : 'Test'}
@@ -294,6 +297,12 @@ function BackendPanel() {
 
         <div className="rounded-lg bg-zinc-25 p-3 text-xs text-zinc-600 ring-1 ring-zinc-200">
           <div className="font-semibold text-ink">Current: <code>{api}</code></div>
+          {isGospelarApi(api) && (
+            <div className="mt-1">
+              Automatic failover between {API_HOSTS.map((h) => h.replace('https://', '')).join(' and ')} —
+              requests are going to <code>{liveHost.replace('https://', '')}</code>.
+            </div>
+          )}
           <div className="mt-1">
             For a permanent default, create <code>churchdashboard/.env.local</code> with:
           </div>
