@@ -26,6 +26,7 @@ import Certificates  from './pages/Certificates.jsx';
 import CertificateVerify from './pages/CertificateVerify.jsx';
 import Branches      from './pages/Branches.jsx';
 import Team          from './pages/Team.jsx';
+import Accounts      from './pages/Accounts.jsx';
 import Settings      from './pages/Settings.jsx';
 import { DISABLED_PATHS } from './disabledFeatures.js';
 
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="certificates" element={<Certificates />} />
         <Route path="branches"  element={<Branches />} />
         <Route path="team"      element={<Team />} />
+        <Route path="accounts"  element={<Accounts />} />
         <Route path="settings"  element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

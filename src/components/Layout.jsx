@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Activity, Wallet, HandCoins, Receipt, PiggyBank, BarChart3,
   Users, Home, HardHat, Megaphone, Share2, Building2, UserCog,
   School, BookOpen, GraduationCap, CalendarDays, TrendingUp, UserCheck, Award,
-  ClipboardCheck, Lock,
+  ClipboardCheck, Lock, KeyRound,
   Settings as SettingsIcon, Search,
   MoreHorizontal, LogOut, ChevronsUpDown,
 } from 'lucide-react';
@@ -48,6 +48,7 @@ const NAV = [
   { section: 'Admin', items: [
     { to: '/branches', icon: Building2,    label: 'Branches', gate: 'branches' },
     { to: '/team',     icon: UserCog,      label: 'Team',     gate: 'team' },
+    { to: '/accounts', icon: KeyRound,     label: 'App accounts', gate: 'accounts' },
     { to: '/settings', icon: SettingsIcon, label: 'Settings', gate: 'settings' },
   ]},
 ];

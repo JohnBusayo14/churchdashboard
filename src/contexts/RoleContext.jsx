@@ -27,8 +27,8 @@ export const ROLE_LABELS = {
 // sunday_school_teacher sees the read-only oversight plus certificates so they
 // can recognise their own students.
 export const ROLE_MENU = {
-  super_admin: ['dashboard', 'finance', 'donations', 'expenses', 'budgets', 'reports', 'members', 'families', 'workers', 'campaigns', 'social', 'classes', 'lessons', 'teachers', 'marks', 'attendance', 'engagement', 'approvals', 'certificates', 'branches', 'team', 'activity', 'settings'],
-  pastor:      ['dashboard', 'finance', 'donations', 'expenses', 'budgets', 'reports', 'members', 'families', 'workers', 'campaigns', 'social', 'classes', 'lessons', 'teachers', 'marks', 'attendance', 'engagement', 'approvals', 'certificates', 'branches', 'team', 'activity', 'settings'],
+  super_admin: ['dashboard', 'finance', 'donations', 'expenses', 'budgets', 'reports', 'members', 'families', 'workers', 'campaigns', 'social', 'classes', 'lessons', 'teachers', 'marks', 'attendance', 'engagement', 'approvals', 'certificates', 'branches', 'team', 'accounts', 'activity', 'settings'],
+  pastor:      ['dashboard', 'finance', 'donations', 'expenses', 'budgets', 'reports', 'members', 'families', 'workers', 'campaigns', 'social', 'classes', 'lessons', 'teachers', 'marks', 'attendance', 'engagement', 'approvals', 'certificates', 'branches', 'team', 'accounts', 'activity', 'settings'],
   finance:     ['dashboard', 'finance', 'donations', 'expenses', 'budgets', 'reports', 'members', 'families', 'campaigns', 'social', 'activity'],
   worker:      ['dashboard', 'members', 'families', 'workers', 'activity'],
   sunday_school_teacher: ['dashboard', 'members', 'families', 'classes', 'lessons', 'marks', 'attendance', 'engagement', 'certificates', 'activity'],
